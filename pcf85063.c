@@ -49,7 +49,7 @@ esp_err_t rtc_write(uint8_t * data, size_t len)
 }
 
 
-void rtc_get_time(void)
+void rtc_get_time(char * out, size_t max_length)
 {
     uint8_t data[7];
 
@@ -59,11 +59,55 @@ void rtc_get_time(void)
     uint8_t minutes = bcd_to_dec(data[1]);
     uint8_t hours = bcd_to_dec(data[2]);
     uint8_t day = bcd_to_dec(data[3]);
-    uint8_t weekday = bcd_to_dec(data[4]);
     uint8_t month = bcd_to_dec(data[5] & 0x1F); // Masking out century bit
     uint8_t year = bcd_to_dec(data[6]);
 
-    ESP_LOGI(TAG, "Current Time: %02d:%02d:%02d %02d/%02d/%04d", hours, minutes, seconds, month, day, 2000 + year);
+    snprintf(out, max_length, "%02d:%02d:%02d %02d/%02d/%04d", hours, minutes, seconds, month, day, 2000 + year);
+}
+
+
+void rtc_get_hms(char * out, size_t max_length)
+{
+    uint8_t data[7];
+
+    ESP_ERROR_CHECK(rtc_read_reg(PCF_TIME_DATE_REG_BEGIN, data, 7));
+
+    uint8_t seconds = bcd_to_dec(data[0] & 0x7F); // Masking out stop bit
+    uint8_t minutes = bcd_to_dec(data[1]);
+    uint8_t hours = bcd_to_dec(data[2]);
+
+    snprintf(out, max_length, "%02d:%02d:%02d", hours, minutes, seconds);
+}
+
+
+void rtc_get_mdy(char * out, size_t max_length)
+{
+    uint8_t data[7];
+
+    ESP_ERROR_CHECK(rtc_read_reg(PCF_TIME_DATE_REG_BEGIN, data, 7));
+
+    uint8_t day = bcd_to_dec(data[3]);
+    uint8_t month = bcd_to_dec(data[5] & 0x1F); // Masking out century bit
+    uint8_t year = bcd_to_dec(data[6]);
+
+    snprintf(out, max_length, "%02d/%02d/%04d", month, day, 2000 + year);
+}
+
+
+void rtc_get_time_raw(uint8_t * out)
+{
+    uint8_t data[7];
+
+    ESP_ERROR_CHECK(rtc_read_reg(PCF_TIME_DATE_REG_BEGIN, data, 7));
+
+    // h m s d m y
+
+    out[0] = bcd_to_dec(data[2]);
+    out[1] = bcd_to_dec(data[1]);
+    out[2] = bcd_to_dec(data[0] & 0x7F); // Masking out stop bit
+    out[3] = bcd_to_dec(data[3]);
+    out[4] = bcd_to_dec(data[5] & 0x1F); // Masking out century bit
+    out[5] = bcd_to_dec(data[6]);
 }
 
 
