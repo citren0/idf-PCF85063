@@ -2,16 +2,13 @@
 #ifndef PCF85063_H_
 #define PCF85063_H_
 
-#include "driver/i2c_master.h"
-#include "freertos/FreeRTOS.h"
 #include "driver/gpio.h"
-#include "esp_log.h"
-#include "esp_err.h"
+#include "driver/i2c_master.h"
 
 #define PCF_I2C_SCL                 GPIO_NUM_10
 #define PCF_I2C_SDA                 GPIO_NUM_11
 #define PCF_I2C_NUM                 I2C_NUM_0
-#define PCF_I2C_FREQ_HZ             40000
+#define PCF_I2C_FREQ_HZ             200000
 #define PCF_I2C_BUF_DISABLE         0
 #define PCF_I2C_TIMEOUT_MS          1000
 #define PCF85063_ADDR               0x51

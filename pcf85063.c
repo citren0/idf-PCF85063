@@ -1,8 +1,12 @@
 
 #include "pcf85063.h"
+#include "freertos/FreeRTOS.h"
+#include "esp_log.h"
+#include "esp_err.h"
+#include "i2c_lock.h"
 
 
-static char * TAG = "PCF85063";
+// static char * TAG = "PCF85063";
 
 static i2c_master_dev_handle_t dev_handle;
 
@@ -35,16 +39,19 @@ esp_err_t rtc_read_reg(uint8_t reg_addr, uint8_t * data, size_t len)
 {
     uint8_t send_buf[1] = { reg_addr };
 
+    lock_i2c();
     esp_err_t ret = i2c_master_transmit_receive(dev_handle, send_buf, sizeof(send_buf), data, len, pdMS_TO_TICKS(PCF_I2C_TIMEOUT_MS));
-    
+    unlock_i2c();
+
     return ret;
 }
 
 
 esp_err_t rtc_write(uint8_t * data, size_t len)
 {
+    lock_i2c();
     esp_err_t ret = i2c_master_transmit(dev_handle, data, len, pdMS_TO_TICKS(PCF_I2C_TIMEOUT_MS));
-    
+    unlock_i2c();
     return ret;
 }
 
@@ -90,7 +97,7 @@ void rtc_get_mdy(char * out, size_t max_length)
     uint8_t month = bcd_to_dec(data[5] & 0x1F); // Masking out century bit
     uint8_t year = bcd_to_dec(data[6]);
 
-    snprintf(out, max_length, "%02d/%02d/%04d", month, day, 2000 + year);
+    snprintf(out, max_length, "%02d/%02d/%04d", month + 1, day, 2000 + year);
 }
 
 
